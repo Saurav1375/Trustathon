@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">TrustToken</string>
+
+    <string name="error_request_timeout">The request timed out.</string>
+    <string name="error_too_many_requests">Oops, it seems like your quota is exceeded.</string>
+    <string name="error_no_internet">Couldn\'t connect to server, please check your internet connection.</string>
+    <string name="error_unknown">Something went wrong. Please try again later.</string>
+    <string name="error_serialization">Couldn\'t serialize or deserialize data.</string>
+    <string name="web_client_id">429853630602-k1sq1hd02b1s11gvbm8ogejii134p0eq.apps.googleusercontent.com</string>
+</resources>
