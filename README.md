@@ -133,7 +133,7 @@ The application follows a clean, modular architecture with clear separation of c
 - Native method integrations
 
 ## 📦 Project Structure
-
+```
 saurav1375-trustathon/
 ├── app/
 │ ├── src/
@@ -148,7 +148,7 @@ saurav1375-trustathon/
 │ │ │ └── res/                # Resources
 │ │ └── ...
 └── ...
-
+```
 
 ## 🚀 Key Features
 1. Secure User Authentication
