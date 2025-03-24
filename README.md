@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="app/src/main/res/drawable/logo2.png" alt="TrusToken Logo" width="200" height="200">
+  <img src="app/src/main/res/drawable/logo2.png" alt="TrusToken Logo" width="400" height="200">
 
 # TrusToken Mobile Application
 
@@ -93,7 +93,7 @@ The application follows a clean, modular architecture with clear separation of c
 • Native method integrations
 
 ## 📦 Project Structure
-
+```
 saurav1375-trustathon/
 ├── app/
 │ ├── src/
@@ -108,7 +108,7 @@ saurav1375-trustathon/
 │ │ │ └── res/                # Resources
 │ │ └── ...
 └── ...
-
+```
 
 ## 🚀 Key Features
 1. Secure User Authentication
@@ -145,8 +145,3 @@ saurav1375-trustathon/
 ## 🚧 Disclaimer
 This is a sample application and should not be used for production without proper security audits and enhancements.
 
----
-
-<div align="center">
-  <strong>Made with ❤ by TrusToken Team</strong>
-</div>
