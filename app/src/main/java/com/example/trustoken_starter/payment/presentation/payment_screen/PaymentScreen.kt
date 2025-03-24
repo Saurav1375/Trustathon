@@ -1,4 +1,6 @@
 package com.example.trustoken_starter.payment.presentation.payment_screen
+
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -40,22 +43,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.trustoken_starter.payment.presentation.home_screen.HomeAction
 import com.example.trustoken_starter.payment.presentation.home_screen.HomeState
 import com.example.trustoken_starter.payment.presentation.user_screen.components.UserAvatar
 
 @Composable
 fun PaymentScreen(
     modifier: Modifier = Modifier,
-    state : HomeState,
-    amount: String = "₹ 500",
-    reason : String = "",
-    onAmountChange: (String) -> Unit = {},
-    onReasonChange: (String) -> Unit = {},
-    onContinue: () -> Unit = {}
+    state: HomeState,
+    onAction: (HomeAction) -> Unit
 ) {
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
     val amountFocusRequester = remember { FocusRequester() }
     val reasonFocusRequester = remember { FocusRequester() }
+    val amount = remember { mutableStateOf("") }
+    val reason = remember { mutableStateOf("") }
 
     // State for showing reason input
     val (isReasonInputVisible, setReasonInputVisible) = remember { mutableStateOf(false) }
@@ -68,7 +71,7 @@ fun PaymentScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(60.dp))
-            
+
             // Payment users section
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -79,7 +82,7 @@ fun PaymentScreen(
                     profilePictureUrl = state.userData?.profilePictureUrl ?: "",
                     username = state.userData?.username ?: ""
                 )
-                
+
                 // Arrow
                 Icon(
                     imageVector = Icons.Default.ArrowForward,
@@ -87,37 +90,33 @@ fun PaymentScreen(
                     modifier = Modifier.padding(horizontal = 8.dp),
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
-                
+
                 // Receiver avatar
-               UserAvatar(
-                   profilePictureUrl = state.selectedUser?.profilePictureUrl ?: "",
-                   username = state.selectedUser?.username ?: ""
-               )
+                UserAvatar(
+                    profilePictureUrl = state.selectedUser?.profilePictureUrl ?: "",
+                    username = state.selectedUser?.username ?: ""
+                )
             }
-            
+
             Text(
                 text = "Paying ${state.selectedUser?.username}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
-            
-            Spacer(modifier = Modifier.height(16.dp))
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Amount display as a transparent text field
-            val displayedAmount = if (amount == "₹ " || amount.isEmpty()) "₹ " else amount
+            Spacer(modifier = Modifier.height(16.dp))
+
 
             // Use BasicTextField for a more customizable text field
             BasicTextField(
-                value = displayedAmount,
+                value = amount.value,
                 onValueChange = { newValue ->
                     // Only allow valid currency input
-                    if (newValue.startsWith("₹ ") && newValue.length <= 10) {
-                        onAmountChange(newValue)
-                    } else if (newValue.isEmpty()) {
-                        onAmountChange("₹ ")
+                    if (newValue.length <= 10) {
+                        amount.value = newValue
                     }
                 },
                 textStyle = TextStyle(
@@ -139,7 +138,24 @@ fun PaymentScreen(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        innerTextField()
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Row {
+
+                                innerTextField()
+                                Text(
+                                    text = "BHC",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 32.sp
+
+                                )
+
+                            }
+                        }
                     }
                 }
             )
@@ -148,12 +164,13 @@ fun PaymentScreen(
                 // Prevent system keyboard from showing up
                 focusManager.clearFocus()
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.7f)
+                    .focusRequester(reasonFocusRequester)
                     .height(48.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(MaterialTheme.colorScheme.primaryContainer)
@@ -164,7 +181,7 @@ fun PaymentScreen(
                     .padding(horizontal = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (!isReasonInputVisible && reason.isEmpty()) {
+                if (!isReasonInputVisible && reason.value.isEmpty()) {
                     // Show as button when no input
                     Text(
                         text = "What is this for?",
@@ -174,8 +191,10 @@ fun PaymentScreen(
                 } else {
                     // Show as text field when active or has content
                     BasicTextField(
-                        value = reason,
-                        onValueChange = onReasonChange,
+                        value = reason.value,
+                        onValueChange = {
+                            reason.value = it
+                        },
                         textStyle = TextStyle(
                             fontSize = 16.sp,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -197,11 +216,13 @@ fun PaymentScreen(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                if (reason.isEmpty()) {
+                                if (reason.value.isEmpty()) {
                                     Text(
-                                        text = "What is this for?",
+                                        text = "Add Note",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                            alpha = 0.6f
+                                        )
                                     )
                                 }
                                 innerTextField()
@@ -210,16 +231,37 @@ fun PaymentScreen(
                     )
                 }
             }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
+
+            Spacer(modifier = Modifier.height(128.dp))
+
             // Continue button
             Box(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surface)
-                    .clickable { onContinue() },
+                    .clickable {
+                        if (amount.value.isEmpty() || amount.value
+                                .filter { it.isDigit() }
+                                .toDouble() <= 0.0
+                        ) {
+                            Toast
+                                .makeText(
+                                    context,
+                                    "Please enter a valid amount",
+                                    Toast.LENGTH_SHORT
+                                )
+                                .show()
+                        } else {
+                            onAction(
+                                HomeAction.Confirm(
+                                    amount = amount.value
+                                        .toDouble(),
+                                    reason = reason.value
+                                )
+                            )
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -228,7 +270,7 @@ fun PaymentScreen(
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
-            
+
 
         }
     }

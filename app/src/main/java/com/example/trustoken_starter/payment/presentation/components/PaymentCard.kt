@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -37,14 +38,14 @@ enum class CardType(
     val title: String,
     @DrawableRes val image: Int
 ) {
-    Visa("visa", R.drawable.ic_visa_logo)
+    BHC("BHC", R.drawable.logo2)
 }
 
 @Composable
 fun PaymentCard(
     state: HomeState
 ) {
-    val visaType by remember { mutableStateOf(CardType.Visa) }
+    val bhcType by remember { mutableStateOf(CardType.BHC) }
     val animatedColor = animateColorAsState(targetValue = Color(0xFF191970), label = "")
 
     Column(
@@ -79,7 +80,8 @@ fun PaymentCard(
                         )
 
                         Image(
-                            painter = painterResource(id = visaType.image),
+                            painter = painterResource(id = bhcType.image),
+                            modifier = Modifier.size(80.dp).padding(bottom = 42.dp),
                             contentDescription = "Card Type"
                         )
                     }

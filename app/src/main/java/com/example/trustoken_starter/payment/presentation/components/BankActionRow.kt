@@ -37,9 +37,7 @@ fun BankActionsRow(
 ) {
     val actions = listOf(
         BankAction(R.drawable.send, "Send", Screen.SendMoneyScreen.route),
-        BankAction(R.drawable.request, "Request"),
-        BankAction(R.drawable.loan, "Loan"),
-        BankAction(R.drawable.top_up, "Topup")
+        BankAction(R.drawable.request, "Request", Screen.PaymentRequestsScreen.route),
     )
 
     Row(

@@ -1,6 +1,8 @@
 package com.example.trustoken_starter.auth.presentation.login
 
+import android.app.Activity
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -78,14 +80,18 @@ fun SignInScreen(
     forgetPass: () -> Unit,
     onRegister: () -> Unit,
     loginWithGoogle: () -> Unit = {},
-    loginWithFacebook: () -> Unit = {},
     onSignIn: (String, String) -> Unit,
 ) {
-
-//    BackHandler {
-//        navController.navigate(Screen.OnBoarding2.route)
-//    }
     val context = LocalContext.current
+    var backPressedOnce by remember { mutableStateOf(false) }
+    BackHandler {
+        if (backPressedOnce) {
+            (context as? Activity)?.finishAffinity() // Close the app and remove it from recent apps
+        } else {
+            backPressedOnce = true
+            Toast.makeText(context, "Press back again to exit", Toast.LENGTH_SHORT).show()
+        }
+    }
     LaunchedEffect(key1 = state.signInError) {
         state.signInError?.let { error ->
             Toast.makeText(context, error, Toast.LENGTH_LONG).show()

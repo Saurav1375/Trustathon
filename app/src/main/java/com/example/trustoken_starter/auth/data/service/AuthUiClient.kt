@@ -7,7 +7,7 @@ import com.example.trustoken_starter.R
 import com.example.trustoken_starter.auth.domain.model.SignInResult
 import com.example.trustoken_starter.auth.domain.model.UserData
 import com.example.trustoken_starter.auth.domain.utils.generateSecureRandomNumber
-import com.example.trustoken_starter.payment.domain.Wallet
+import com.example.trustoken_starter.payment.domain.model.Wallet
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.auth.GoogleAuthProvider

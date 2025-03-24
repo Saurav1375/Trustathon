@@ -11,9 +11,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -26,10 +30,19 @@ import com.example.trustoken_starter.auth.presentation.forget_password.ForgetPas
 import com.example.trustoken_starter.auth.presentation.forget_password.ResetPassScreen
 import com.example.trustoken_starter.auth.presentation.login.SignInScreen
 import com.example.trustoken_starter.auth.presentation.register.SignUpScreen
+import com.example.trustoken_starter.core.presentation.util.ObserveAsEvents
 import com.example.trustoken_starter.payment.presentation.home_screen.HomeAction
+import com.example.trustoken_starter.payment.presentation.home_screen.HomeEvent
 import com.example.trustoken_starter.payment.presentation.home_screen.HomeScreen
 import com.example.trustoken_starter.payment.presentation.home_screen.HomeViewModel
+import com.example.trustoken_starter.payment.presentation.payment_request.ConfirmPaymentScreen
+import com.example.trustoken_starter.payment.presentation.payment_request.PaymentRequestListScreen
 import com.example.trustoken_starter.payment.presentation.payment_screen.PaymentScreen
+import com.example.trustoken_starter.payment.presentation.pin_verification.ActivationActions
+import com.example.trustoken_starter.payment.presentation.pin_verification.ActivationEvents
+import com.example.trustoken_starter.payment.presentation.pin_verification.ActivationScreen
+import com.example.trustoken_starter.payment.presentation.pin_verification.ActivationViewModel
+import com.example.trustoken_starter.payment.presentation.transaction_details.TransactionDetailScreen
 import com.example.trustoken_starter.payment.presentation.user_screen.UserListScreen
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -52,7 +65,46 @@ fun NavigationGraph(
 
     val scope = rememberCoroutineScope()
 
+    ObserveAsEvents(events = homeViewModel.events) { event ->
+        when(event) {
+            is HomeEvent.Error -> {
+                Toast.makeText(
+                    context,
+                    event.error,
+                    Toast.LENGTH_LONG
+                ).show()
 
+                navController.navigate(Screen.PaymentScreen.route)
+            }
+
+            is HomeEvent.NavigateToPayment ->  {
+                Toast.makeText(
+                    context,
+                    "SUCCESS",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                navController.navigate(Screen.PasswordScreen.route)
+            }
+            HomeEvent.Success -> TODO()
+            is HomeEvent.PaymentError -> {
+                Toast.makeText(
+                    context,
+                    event.error,
+                    Toast.LENGTH_LONG
+                ).show()
+                navController.navigate(Screen.PaymentScreen.route)
+            }
+
+            HomeEvent.PaymentSuccessful -> {
+                Toast.makeText(
+                    context,
+                    "Payment/Request Successful",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
     LaunchedEffect(key1 = Unit) {
         if (authUiClient.getSignedInUser() != null) {
             navController.navigate(Screen.HomeScreen.route)
@@ -72,7 +124,26 @@ fun NavigationGraph(
                     if (it is HomeAction.OnSendClick) {
                         navController.navigate(Screen.SendMoneyScreen.route)
                     }
+                    if (it is HomeAction.OnRequestClick) {
+                        navController.navigate(Screen.PaymentRequestsScreen.route)
+                    }
+                },
+                onClick = {
+                    navController.navigate(Screen.TransactionDetails.route)
+                },
+
+                onSignOutAccount = {
+                    scope.launch {
+                        authUiClient.signOut()
+                        Toast.makeText(
+                            applicationContext,
+                            "Signed Out",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        navController.navigate(Screen.SignInScreen.route)
+                    }
                 }
+
             )
         }
 
@@ -91,7 +162,10 @@ fun NavigationGraph(
 
         composable(Screen.PaymentScreen.route) {
             PaymentScreen(
-                state = state1.value
+                state = state1.value,
+                onAction = {
+                    homeViewModel.onAction(it)
+                }
             )
         }
 
@@ -147,9 +221,6 @@ fun NavigationGraph(
 
                     }
 
-
-                },
-                loginWithFacebook = {
 
                 },
             ) { email, pass ->
@@ -232,6 +303,103 @@ fun NavigationGraph(
                 navController.navigate(Screen.SignInScreen.route)
             }
 
+        }
+
+        composable(route = Screen.PasswordScreen.route) {
+            val activationViewModel = koinViewModel<ActivationViewModel>()
+            val state by activationViewModel.state.collectAsStateWithLifecycle()
+
+            val context = LocalContext.current
+            ObserveAsEvents(events = activationViewModel.events) { event ->
+                when(event) {
+                    is ActivationEvents.Error -> {
+                        Toast.makeText(
+                            context,
+                            "Incorrect Password Please remove and reconnect the Token again",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        navController.navigateUp()
+                    }
+
+                    ActivationEvents.Success -> {
+//                        Toast.makeText(
+//                            context,
+//                            "Payment Successful Waiting for the recipient to confirm  ",
+//                            Toast.LENGTH_LONG
+//                        ).show()
+                        homeViewModel.onAction(HomeAction.Transaction)
+                        navController.navigate(Screen.TransactionDetails.route)
+                    }
+                }
+            }
+
+            val focusRequesters = remember {
+                List(6) { FocusRequester() }
+            }
+            val focusManager = LocalFocusManager.current
+            val keyboardManager = LocalSoftwareKeyboardController.current
+
+            LaunchedEffect(state.focusedIndex) {
+                state.focusedIndex?.let { index ->
+                    focusRequesters.getOrNull(index)?.requestFocus()
+                }
+            }
+
+            LaunchedEffect(state.code, keyboardManager) {
+                val allNumbersEntered = state.code.none { it == null }
+                if(allNumbersEntered) {
+                    focusRequesters.forEach {
+                        it.freeFocus()
+                    }
+                    focusManager.clearFocus()
+                    keyboardManager?.hide()
+                }
+            }
+
+            ActivationScreen(
+                state = state,
+                focusRequesters = focusRequesters,
+                onAction = { action ->
+                    when(action) {
+                        is ActivationActions.OnEnterNumber -> {
+                            if(action.number != null) {
+                                focusRequesters[action.index].freeFocus()
+                            }
+                        }
+                        else -> Unit
+                    }
+                    activationViewModel.onAction(action)
+                },
+                modifier = modifier
+            )
+        }
+
+        composable(Screen.TransactionDetails.route) {
+            TransactionDetailScreen(
+                state = state1.value
+            ) {
+                navController.navigate(Screen.HomeScreen.route)
+            }
+
+        }
+
+        composable(Screen.PaymentRequestsScreen.route) {
+            PaymentRequestListScreen(
+                state = state1.value,
+                onAction = {
+                    homeViewModel.onAction(it)
+                    navController.navigate(Screen.ConfirmPaymentRequestScreen.route)
+                }
+            )
+        }
+
+        composable(Screen.ConfirmPaymentRequestScreen.route) {
+            ConfirmPaymentScreen(
+                state = state1.value,
+                onAction = {
+                    homeViewModel.onAction(it)
+                }
+            )
         }
 
     }

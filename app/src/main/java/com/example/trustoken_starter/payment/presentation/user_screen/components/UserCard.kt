@@ -20,9 +20,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.trustoken_starter.auth.domain.model.UserData
+import com.example.trustoken_starter.ui.theme.BankColor
+import com.example.trustoken_starter.ui.theme.GreenColor
+import com.example.trustoken_starter.ui.theme.TextColor
 
 @Composable
 fun UserCard(
@@ -40,7 +44,7 @@ fun UserCard(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = BankColor
         )
     ) {
         Row(
@@ -63,7 +67,7 @@ fun UserCard(
                     text = user.username ?: "No username",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = Color.White
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -71,7 +75,7 @@ fun UserCard(
                 Text(
                     text = user.emailId,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = TextColor
                 )
             }
             

@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -18,10 +19,13 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.trustoken_starter.payment.presentation.home_screen.HomeAction
 import com.example.trustoken_starter.payment.presentation.home_screen.HomeState
+import com.example.trustoken_starter.payment.presentation.transaction_details.AppColors
 import com.example.trustoken_starter.payment.presentation.user_screen.components.UserCard
+import com.example.trustoken_starter.ui.theme.BgColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,16 +37,25 @@ fun UserListScreen(
 
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = BgColor
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            TopAppBar(
+            SmallTopAppBar(
                 title = { Text("Users") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                navigationIcon = {
+//                IconButton(onClick = { navController.popBackStack() }) {
+//                    Icon(
+//                        imageVector = Icons.Default.ArrowBack,
+//                        contentDescription = "Back"
+//                    )
+//                }
+                },
+                colors = TopAppBarDefaults.smallTopAppBarColors(
+                    containerColor = AppColors.PrimaryBlue,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
             )
 
@@ -60,7 +73,7 @@ fun UserListScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp)
                 ) {
-                    items(state.allUsers) { user ->
+                    items(state.allUsers.filter { it.userId != state.userData?.userId }) { user ->
                         UserCard(user = user) {
                             onAction(HomeAction.OnUserClick(user))
                         }

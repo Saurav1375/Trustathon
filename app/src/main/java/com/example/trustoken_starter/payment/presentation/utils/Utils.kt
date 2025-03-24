@@ -17,3 +17,8 @@ fun formatDate(millis: Long): String {
     val dateFormat = SimpleDateFormat("MM/yy", Locale.getDefault())
     return dateFormat.format(Date(millis))
 }
+
+fun formatLongToDateTime(epochMillis: Long): String {
+    val sdf = SimpleDateFormat("MMM dd yyyy HH:mm:ss", Locale.ENGLISH)
+    return sdf.format(Date(epochMillis))
+}
