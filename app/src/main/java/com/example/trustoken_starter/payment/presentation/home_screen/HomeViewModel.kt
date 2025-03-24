@@ -89,8 +89,9 @@ class HomeViewModel(
                     }
                     return
                 }
-                initiateTransaction()
                 _state.value.transaction?.let { findTransaction(it.id) }
+
+                initiateTransaction()
                 TokenService.logoutUSB()
             }
 
