@@ -44,6 +44,7 @@ In the ActivationViewModel, the login() native function is used during PIN verif
 In the HomeViewModel, native functions play crucial roles:
 - signData(): Generates cryptographic signatures for transactions
 - verify(): Validates transaction signatures before processing
+- logout(): Logout Session form TrusToken after verification
 - Ensures transaction integrity and non-repudiation
 
 #### Encryption Mechanisms
