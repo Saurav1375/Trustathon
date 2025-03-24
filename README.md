@@ -91,7 +91,6 @@ The application follows a clean, modular architecture with clear separation of c
 - Transaction confirmation
 - *Transaction List Screen*:
 - View transaction history
-- Filter and sort transactions
 
 ### Security Considerations
 - Native functions provide hardware-level security
@@ -124,8 +123,9 @@ The application follows a clean, modular architecture with clear separation of c
 ### Language and Frameworks
 - *Primary Language*: Kotlin
 - *UI Framework*: Jetpack Compose
-- *Architecture*: MVVM
-- *Dependency Injection*: Custom DI module
+- *Architecture*: Clean Architecture, MVVM + MVI,
+- *Dependency Injection*: Koin
+- *Database*: Firestore, Firebase Realtime Database, Firebase Storage
 
 ### Native Components
 - C++ cryptographic libraries
@@ -174,7 +174,7 @@ saurav1375-trustathon/
 - Jetpack Compose
 - Kotlin Coroutines
 - Native C++ Libraries
-- Custom Dependency Injection
+- Koin Dependency Injection
 
 ## 🔒 Security Considerations
 - Implements secure authentication mechanisms
