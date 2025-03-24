@@ -9,9 +9,10 @@ Secure Digital Wallet Management at Your Fingertips
 ## 📱 Screenshots
 
 <div align="center">
-  <img src="/api/placeholder/250/500" alt="Login Screen" width="250">
-  <img src="/api/placeholder/250/500" alt="Home Screen" width="250">
-  <img src="/api/placeholder/250/500" alt="Payment Screen" width="250">
+  <img src="app/src/main/res/drawable/login.jpg" alt="Login Screen" width="250">
+  <img src="app/src/main/res/drawable/home.jpg" alt="Home Screen" width="250">
+  <img src="app/src/main/res/drawable/payment.jpg" alt="Payment Screen" width="250">
+  <img src="app/src/main/res/drawable/details.jpg" alt="Details Screen" width="250">
 </div>
 
 ## 📝 Project Overview
