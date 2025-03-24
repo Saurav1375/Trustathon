@@ -17,80 +17,119 @@
 ## 📝 Project Overview
 TrusToken is a comprehensive mobile application designed for secure digital wallet management, user authentication, and seamless financial transactions. Built with Kotlin and Jetpack Compose, the app provides a robust and user-friendly experience for managing digital assets and payments.
 
+## 🔐 Native Cryptographic Functions
+
+### Native Function Overview
+TrusToken leverages several critical native cryptographic functions to enhance security:
+
+| Function | Purpose | Usage in Application |
+|----------|---------|----------------------|
+| libint(int) | Integer manipulation | Low-level computational operations |
+| login(tokenPin) | User Authentication | Secure USB token-based login |
+| signData() | Transaction Signing | Cryptographically sign transactions |
+| verify(string, plainText) | Signature Verification | Validate transaction authenticity |
+| encrypt() | Data Encryption | Secure sensitive information |
+| decrypt(string) | Data Decryption | Retrieve original sensitive data |
+| logout() | Session Termination | Securely end user session |
+
+### Security Implementation Details
+
+#### Authentication Flow
+In the ActivationViewModel, the login() native function is used during PIN verification:
+- Validates user credentials against USB token
+- Provides a secure, hardware-based authentication mechanism
+- Prevents unauthorized access with cryptographic verification
+
+#### Transaction Security
+In the HomeViewModel, native functions play crucial roles:
+- signData(): Generates cryptographic signatures for transactions
+- verify(): Validates transaction signatures before processing
+- Ensures transaction integrity and non-repudiation
+
+#### Encryption Mechanisms
+- encrypt() and decrypt() protect sensitive user and transaction data
+- Prevents unauthorized data access
+- Provides an additional layer of security beyond standard encryption
+
 ## 🏗 Architecture
 The application follows a clean, modular architecture with clear separation of concerns:
-• *Presentation Layer*: Jetpack Compose UI components
-• *Domain Layer*: Business logic and use cases
-• *Data Layer*: Service implementations and data management
-• *Core Layer*: Shared utilities, navigation, and dependency injection
+- *Presentation Layer*: Jetpack Compose UI components
+- *Domain Layer*: Business logic and use cases
+- *Data Layer*: Service implementations and data management
+- *Core Layer*: Shared utilities, navigation, and dependency injection
 
 ## 🔑 Authentication Features
 ### User Authentication Modules
-• *Sign Up Screen*:
+- *Sign Up Screen*:
 - New user registration
 - Secure account creation
-  • *Login Screen*:
+- *Login Screen*:
 - User authentication
 - Credential validation
-  • *Forget Password*:
+- *Forget Password*:
 - Password reset functionality
 - Change password interface
 
 ### Authentication Flow
-• Implements secure sign-in methods
-• Generates and manages user wallet addresses
-• Handles authentication states
-• Provides error handling for authentication processes
+- Implements secure sign-in methods
+- Generates and manages user wallet addresses
+- Handles authentication states
+- Provides error handling for authentication processes
 
 ## 💰 Payment and Wallet Functionality
 ### Wallet Management
-• *Wallet Creation*: Secure wallet generation
-• *Transaction Handling*:
+- *Wallet Creation*: Secure wallet generation
+- *Transaction Handling*:
 - Transaction listing
 - Transaction details view
 - Transaction parsing and management
 
 ### Payment Screens
-• *Payment Screen*:
+- *Payment Screen*:
 - Initiate and confirm payments
 - Transaction confirmation
-  • *Transaction List Screen*:
+- *Transaction List Screen*:
 - View transaction history
 - Filter and sort transactions
 
-## 🛡 Security Features
-• Native C++ cryptographic libraries
-• Secure wallet address generation
-• PIN verification mechanism
-• Network error handling
-• Comprehensive error management
+### Security Considerations
+- Native functions provide hardware-level security
+- USB token acts as a physical authentication factor
+- Cryptographic operations executed in secure native environment
+
+## 🔒 Advanced Security Features
+- Hardware-based authentication
+- Cryptographic transaction signing
+- Secure data encryption/decryption
+- Tamper-resistant transaction verification
+
 
 ## 📱 User Interface
 ### UI Components
-• Custom themed screens
-• Responsive design
-• Material Design principles
-• Custom fonts (Poppins, Roboto)
-• Adaptive UI components
+- Custom themed screens
+- Responsive design
+- Material Design principles
+- Custom fonts (Poppins, Roboto)
+- Adaptive UI components
 
 ### Screens and Navigation
-• Home Screen
-• User Profile
-• Payment Screens
-• Authentication Screens
-• Transaction Screens
+- Home Screen
+- User Profile
+- Payment Screens
+- Authentication Screens
+- Transaction Screens
 
 ## 🧩 Technical Specifications
 ### Language and Frameworks
-• *Primary Language*: Kotlin
-• *UI Framework*: Jetpack Compose
-• *Architecture*: MVVM
-• *Dependency Injection*: Custom DI module
+- *Primary Language*: Kotlin
+- *UI Framework*: Jetpack Compose
+- *Architecture*: MVVM
+- *Dependency Injection*: Custom DI module
 
 ### Native Components
-• C++ cryptographic libraries
-• PKCS#11 support
-• Native method integrations
+- C++ cryptographic libraries
+- PKCS#11 support
+- Native method integrations
 
 ## 📦 Project Structure
 ```
@@ -125,23 +164,22 @@ saurav1375-trustathon/
 4. Build and run the project
 
 ### Prerequisites
-• Android Studio
-• Kotlin SDK
-• Gradle
-• Android SDK
+- Android Studio
+- Kotlin SDK
+- Gradle
+- Android SDK
 
 ## 📌 Dependencies
-• Jetpack Compose
-• Kotlin Coroutines
-• Native C++ Libraries
-• Custom Dependency Injection
+- Jetpack Compose
+- Kotlin Coroutines
+- Native C++ Libraries
+- Custom Dependency Injection
 
 ## 🔒 Security Considerations
-• Implements secure authentication mechanisms
-• Uses native cryptographic libraries
-• Comprehensive error and network error handling
-• Secure wallet address generation
+- Implements secure authentication mechanisms
+- Uses native cryptographic libraries
+- Comprehensive error and network error handling
+- Secure wallet address generation
 
 ## 🚧 Disclaimer
 This is a sample application and should not be used for production without proper security audits and enhancements.
-
