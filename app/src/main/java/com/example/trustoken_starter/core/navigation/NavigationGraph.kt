@@ -74,7 +74,6 @@ fun NavigationGraph(
                     Toast.LENGTH_LONG
                 ).show()
 
-                navController.navigate(Screen.PaymentScreen.route)
             }
 
             is HomeEvent.NavigateToPayment ->  {
