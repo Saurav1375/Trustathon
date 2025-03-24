@@ -25,52 +25,57 @@ class AuthUiClient(
 ) {
 
     private val auth = Firebase.auth
-    // Google sign-in logic
-    suspend fun SignIn(): IntentSender? {
-        val result = try {
-            oneTapClient.beginSignIn(buildSignInRequest()).await()
 
+    /**
+     * Initiates the Google One Tap sign-in flow.
+     * Returns an [IntentSender] that can be used to prompt the user for sign-in.
+     */
+    suspend fun SignIn(): IntentSender? {
+        return try {
+            oneTapClient.beginSignIn(buildSignInRequest()).await()?.pendingIntent?.intentSender
         } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) throw e
             null
         }
-        return result?.pendingIntent?.intentSender
     }
 
-
+    /**
+     * Handles the sign-in intent result, authenticates the user with Firebase,
+     * and stores user details in Firestore.
+     *
+     * @param intent The intent received from the sign-in flow.
+     * @return [SignInResult] containing user data or an error message.
+     */
     suspend fun SignInWithIntent(intent: Intent): SignInResult {
         val credential = oneTapClient.getSignInCredentialFromIntent(intent)
-        val googleIdToken = credential.googleIdToken
+        val googleIdToken = credential.googleIdToken ?: return SignInResult(null, "Invalid Google ID Token")
         val googleCredential = GoogleAuthProvider.getCredential(googleIdToken, null)
 
         return try {
             val user = auth.signInWithCredential(googleCredential).await().user
-            val userId = user?.uid ?: return SignInResult(null, "User ID is null")
+                ?: return SignInResult(null, "User authentication failed")
 
+            val userId = user.uid
             val userRef = firestore.collection("users").document(userId)
             val walletRef = firestore.collection("wallets").document(userId)
 
-            // Check if the user already exists
+            // Fetch user and wallet data from Firestore
             val userSnapshot = userRef.get().await()
             val walletSnapshot = walletRef.get().await()
 
-            // If the wallet doesn't exist, generate new wallet data
-            val wallet = if (!walletSnapshot.exists()) {
-                Wallet(
-                    userId = userId,
-                    publicKey = "",
-                    walletAddress = generateSecureRandomNumber(),
-                    balance = 10000.0,
-                    creationDate = System.currentTimeMillis()
-                ).also {
-                    walletRef.set(it).await()
-                }
-            } else {
-                walletSnapshot.toObject(Wallet::class.java)!!
+            // Create a new wallet if not already present
+            val wallet = walletSnapshot.toObject(Wallet::class.java) ?: Wallet(
+                userId = userId,
+                publicKey = "",
+                walletAddress = generateSecureRandomNumber(),
+                balance = 10000.0,
+                creationDate = System.currentTimeMillis()
+            ).also {
+                walletRef.set(it).await()
             }
 
-            // Store user details
+            // Save or update user details in Firestore
             val userData = mapOf(
                 "userId" to userId,
                 "username" to (user.displayName ?: "Unknown"),
@@ -81,49 +86,55 @@ class AuthUiClient(
 
             userRef.set(userData, SetOptions.merge()).await()
 
+            // Return successful sign-in result
             SignInResult(
-                data = user.run {
-                    UserData(
-                        userId = uid,
-                        username = displayName,
-                        profilePictureUrl = photoUrl?.toString(),
-                        emailId = email.toString()
-                    )
-                },
+                data = UserData(
+                    userId = userId,
+                    username = user.displayName,
+                    profilePictureUrl = user.photoUrl?.toString(),
+                    emailId = user.email ?: ""
+                ),
                 errorMessage = null
             )
         } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) throw e
-            SignInResult(
-                data = null,
-                errorMessage = e.message
-            )
+            SignInResult(null, e.message)
         }
     }
 
-
-    // Sign out logic for both Google and Facebook
+    /**
+     * Signs out the currently authenticated user from Firebase and Google One Tap.
+     */
     suspend fun signOut() {
         try {
             oneTapClient.signOut().await()
             auth.signOut()
-
         } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) throw e
         }
     }
 
+    /**
+     * Retrieves the currently signed-in user's details.
+     *
+     * @return [UserData] of the authenticated user, or null if no user is signed in.
+     */
     fun getSignedInUser(): UserData? = auth.currentUser?.run {
         UserData(
             userId = uid,
             username = displayName,
             profilePictureUrl = photoUrl?.toString(),
-            emailId = email.toString()
+            emailId = email ?: ""
         )
     }
 
+    /**
+     * Builds a Google One Tap sign-in request.
+     *
+     * @return [BeginSignInRequest] configured for Google authentication.
+     */
     private fun buildSignInRequest(): BeginSignInRequest {
         return BeginSignInRequest.builder()
             .setGoogleIdTokenRequestOptions(
@@ -136,3 +147,4 @@ class AuthUiClient(
             .build()
     }
 }
+

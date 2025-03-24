@@ -27,32 +27,3 @@ object TransactionParser {
         return json.decodeFromString(TransactionEntity.serializer(), jsonString)
     }
 }
-
-// Example usage:
-fun main() {
-    // Create a sample transaction
-    val transaction = TransactionEntity(
-        id = "tx123",
-        fromAddress = "0x123abc",
-        toAddress = "0x456def",
-        amount = 1.5,
-        reason = "Payment for services",
-        timestamp = System.currentTimeMillis(),
-        status = "COMPLETED",
-        transactionString = "Raw transaction data",
-        signature = "0xsignature789"
-    )
-    
-    // Convert to JSON
-    val jsonString = TransactionParser.toJson(transaction)
-    println("JSON representation:")
-    println(jsonString)
-    
-    // Convert back to object
-    val parsedTransaction = TransactionParser.fromJson(jsonString)
-    println("\nParsed back to object:")
-    println(parsedTransaction)
-    
-    // Verify equality
-    println("\nOriginal equals parsed: ${transaction == parsedTransaction}")
-}

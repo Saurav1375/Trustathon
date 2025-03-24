@@ -1,5 +1,8 @@
 package com.example.trustoken_starter.core.navigation
 
+/**
+ * A sealed interface representing the routes of screens in the application..
+ */
 sealed class Screen(
     val route: String
 ) {
@@ -15,8 +18,4 @@ sealed class Screen(
     data object TransactionDetails : Screen("transaction_details")
     data object PaymentRequestsScreen : Screen("payment_requests")
     data object ConfirmPaymentRequestScreen : Screen("confirm_payment_request")
-    data object CategoryScreen : Screen("category_screen")
-    data object ProductDetailScreen : Screen("product_detail_screen")
-    data object CartScreen : Screen("cart_screen")
-    data object ProfileScreen : Screen("profile_screen")
 }

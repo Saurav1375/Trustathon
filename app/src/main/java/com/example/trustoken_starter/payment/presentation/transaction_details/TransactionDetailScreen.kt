@@ -248,21 +248,24 @@ fun DetailRow(label: String, value: String, icon: androidx.compose.ui.graphics.v
 }
 
 
+/**
+ * Shortens a long address string by keeping the first 6 and last 4 characters,
+ * replacing the middle section with "...". If the address is 10 characters or shorter,
+ * it remains unchanged.
+ *
+ * Example usage:
+ * ```
+ * val fullAddress = "0x1234567890abcdef"
+ * val shortened = shortenAddress(fullAddress) // "0x1234...cdef"
+ * ```
+ *
+ * @param address The full address string to be shortened.
+ * @return A shortened version of the address if it's longer than 10 characters, otherwise the original address.
+ */
 fun shortenAddress(address: String): String {
     return if (address.length > 10) {
         "${address.take(6)}...${address.takeLast(4)}"
     } else {
         address
     }
-}
-
-@SuppressLint("NewApi")
-fun formatDate(dateTime: LocalDateTime): String {
-    val formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy • HH:mm")
-    return dateTime.format(formatter)
-}
-
-fun formatDetailDate(dateTime: LocalDateTime): String {
-    val formatter = DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy HH:mm:ss")
-    return dateTime.format(formatter)
 }

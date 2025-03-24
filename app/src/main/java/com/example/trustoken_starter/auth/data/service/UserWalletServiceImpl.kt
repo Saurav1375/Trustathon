@@ -103,6 +103,9 @@ class UserWalletServiceImpl(
     }
 
 
+    /**
+     * Fetches All Users Data
+     */
     override fun getAllUsers(): Flow<List<UserData>> = callbackFlow {
         val listenerRegistration = firestore.collection("users")
             .addSnapshotListener { snapshot, error ->
@@ -129,6 +132,10 @@ class UserWalletServiceImpl(
         awaitClose { listenerRegistration.remove() }
     }
 
+
+    /**
+     * Saves a wallet in the database
+     */
     override suspend fun saveWallet(wallet: Wallet): Boolean {
         return try {
             firestore.collection("wallets")

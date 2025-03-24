@@ -322,11 +322,6 @@ fun NavigationGraph(
                     }
 
                     ActivationEvents.Success -> {
-//                        Toast.makeText(
-//                            context,
-//                            "Payment Successful Waiting for the recipient to confirm  ",
-//                            Toast.LENGTH_LONG
-//                        ).show()
                         homeViewModel.onAction(HomeAction.Transaction)
                         navController.navigate(Screen.TransactionDetails.route)
                     }

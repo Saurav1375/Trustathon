@@ -10,15 +10,27 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
+/**
+ * Implementation of the TransactionService that interacts with Firebase Realtime Database.
+ * Provides methods to save, retrieve, and observe transactions in real-time.
+ */
 class TransactionServiceImpl(
     private val db: FirebaseDatabase,
     private val application: Application
 ) : TransactionService {
+
+    /**
+     * Saves a transaction to Firebase Realtime Database.
+     *
+     * @param transaction The transaction entity to be saved.
+     * @return True if the transaction is successfully saved, false otherwise.
+     */
     override suspend fun saveTransaction(transaction: TransactionEntity): Boolean {
         val tt = TransactionParser.toJson(transaction)
         return try {
             val database = FirebaseDatabase.getInstance().reference
 
+            // Reference to the transaction node in the database
             val transactionRef = database.child("transactions").child(transaction.id)
             transactionRef.setValue(tt).await()
 
@@ -29,10 +41,14 @@ class TransactionServiceImpl(
         }
     }
 
-
+    // Reference to the "transactions" node in Firebase
     private val transactionsRef = db.getReference("transactions")
 
-    // Method 1: Get all transactions with real-time updates
+    /**
+     * Retrieves all transactions as a Flow, providing real-time updates.
+     *
+     * @return A Flow that emits a list of TransactionEntity objects whenever there is a change.
+     */
     override fun getAllTransactionsAsFlow(): Flow<List<TransactionEntity>> = callbackFlow {
         val transactionsList = mutableListOf<TransactionEntity>()
 
@@ -45,51 +61,61 @@ class TransactionServiceImpl(
                     transaction?.let { transactionsList.add(TransactionParser.fromJson(it)) }
                 }
 
-                trySend(transactionsList.toList())
+                trySend(transactionsList.toList()) // Emit updated transaction list
             }
 
             override fun onCancelled(error: DatabaseError) {
-                close(error.toException())
+                close(error.toException()) // Close Flow in case of an error
             }
         }
 
         transactionsRef.addValueEventListener(listener)
 
-        // Remove the listener when the flow is cancelled
+        // Remove the listener when the Flow collection is stopped
         awaitClose {
             transactionsRef.removeEventListener(listener)
         }
     }
 
-    // Method 2: Get a single transaction by ID with real-time updates
+    /**
+     * Retrieves a single transaction by its ID as a Flow, providing real-time updates.
+     *
+     * @param transactionId The unique ID of the transaction.
+     * @return A Flow that emits the requested TransactionEntity whenever there is a change.
+     */
     override fun getTransactionByIdAsFlow(transactionId: String): Flow<TransactionEntity?> = callbackFlow {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val transaction = snapshot.getValue(String::class.java)
-                trySend(transaction?.let { TransactionParser.fromJson(it)})
+                trySend(transaction?.let { TransactionParser.fromJson(it) }) // Emit transaction data
             }
 
             override fun onCancelled(error: DatabaseError) {
-                close(error.toException())
+                close(error.toException()) // Close Flow in case of an error
             }
         }
 
         val transactionRef = transactionsRef.child(transactionId)
         transactionRef.addValueEventListener(listener)
 
-        // Remove the listener when the flow is cancelled
+        // Remove the listener when the Flow collection is stopped
         awaitClose {
             transactionRef.removeEventListener(listener)
         }
     }
 
-    // Optional: A non-Flow version to get a transaction by ID (one-time fetch)
+    /**
+     * Fetches a transaction by its ID once (one-time retrieval, not real-time).
+     *
+     * @param transactionId The unique ID of the transaction.
+     * @return The requested TransactionEntity, or null if not found.
+     */
     override suspend fun getTransactionById(transactionId: String): TransactionEntity? {
         return try {
             val snapshot = transactionsRef.child(transactionId).get().await()
             val transaction = snapshot.getValue(String::class.java)
             if (transaction != null) {
-                TransactionParser.fromJson(transaction)
+                TransactionParser.fromJson(transaction) // Parse and return the transaction
             }
             null
         } catch (e: Exception) {

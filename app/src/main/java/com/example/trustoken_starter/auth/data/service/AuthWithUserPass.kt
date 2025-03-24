@@ -14,132 +14,98 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 
-class AuthWithUserPass (
-    private val firestore: FirebaseFirestore
-    ) {
+class AuthWithUserPass(private val firestore: FirebaseFirestore) {
 
     private val auth: FirebaseAuth = Firebase.auth
-    suspend fun signUp(emailId: String, password: String, name: String): SignInResult {
-        return try {
-            val user = auth.createUserWithEmailAndPassword(emailId, password).await().user
-            val storageRef = FirebaseStorage.getInstance()
-                .reference
-                .child("profile_images/guest_image.jpg")
-            val downloadUrl = storageRef.downloadUrl.await()
-            user?.let {
-                val profileUpdates = userProfileChangeRequest {
-                    displayName = name
-                    this.photoUri = Uri.parse(downloadUrl.toString())
-                }
-                it.updateProfile(profileUpdates).await()
-            }
-            user?.let {
-                val userData = UserData(
-                    userId = it.uid,
-                    username = name,
-                    profilePictureUrl = it.photoUrl?.toString(),
-                    emailId = it.email.toString()
-                )
+    private val storageRef = FirebaseStorage.getInstance().reference.child("profile_images/guest_image.jpg")
 
-                saveUserToFirestore(userData)
-            }
-            println("email: $emailId, pass: $password")
-            val userId = user?.uid ?: return SignInResult(null, "User ID is null")
+    /**
+     * Signs up a new user, assigns a wallet, and saves their details in Firestore.
+     */
+    suspend fun signUp(emailId: String, password: String, name: String): SignInResult = runCatching {
+        val user = auth.createUserWithEmailAndPassword(emailId, password).await().user
+            ?: return SignInResult(null, "User registration failed")
 
-            val userRef = firestore.collection("users").document(userId)
-            val walletRef = firestore.collection("wallets").document(userId)
+        val profileImageUrl = storageRef.downloadUrl.await().toString()
 
-            // Check if the user already exists
-            val userSnapshot = userRef.get().await()
-            val walletSnapshot = walletRef.get().await()
+        user.updateProfile(userProfileChangeRequest {
+            displayName = name
+            photoUri = Uri.parse(profileImageUrl)
+        }).await()
 
-            // If the wallet doesn't exist, generate new wallet data
-            val wallet = if (!walletSnapshot.exists()) {
-                Wallet(
-                    userId = userId,
-                    publicKey = "",
-                    walletAddress = generateSecureRandomNumber(),
-                    balance = 10000.0,
-                    creationDate = System.currentTimeMillis()
-                ).also {
-                    walletRef.set(it).await()
-                }
-            } else {
-                walletSnapshot.toObject(Wallet::class.java)!!
-            }
+        val userId = user.uid
+        val userData = UserData(
+            userId = userId,
+            username = name,
+            profilePictureUrl = profileImageUrl,
+            emailId = emailId
+        )
 
-            // Store user details
-            val userData = mapOf(
-                "userId" to userId,
-                "username" to (user.displayName ?: "Unknown"),
-                "emailId" to (user.email ?: "No Email"),
-                "profilePictureUrl" to (user.photoUrl?.toString() ?: ""),
-                "walletAddress" to wallet.walletAddress
-            )
+        saveUserToFirestore(userData)
+        setupUserWallet(userId)
 
-            userRef.set(userData, SetOptions.merge()).await()
-
-            SignInResult(
-                data = user?.run {
-                    UserData(
-                        userId = uid,
-                        username = displayName,
-                        profilePictureUrl = photoUrl?.toString(),
-                        emailId = email.toString()
-                    )
-                },
-                errorMessage = null
-
-            )
-
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            SignInResult(data = null, errorMessage = e.message)
-        }
+        SignInResult(data = userData, errorMessage = null)
+    }.getOrElse { e ->
+        e.printStackTrace()
+        SignInResult(null, e.message ?: "An error occurred")
     }
 
-    suspend fun signIn(emailId: String, password: String): SignInResult = try {
+    /**
+     * Signs in a user using email and password.
+     */
+    suspend fun signIn(emailId: String, password: String): SignInResult = runCatching {
         val user = auth.signInWithEmailAndPassword(emailId, password).await().user
+            ?: return SignInResult(null, "Invalid credentials")
+
         SignInResult(
-            data = user?.run {
-                UserData(
-                    userId = uid,
-                    username = displayName,
-                    profilePictureUrl = photoUrl?.toString(),
-                    emailId = email.toString()
-                )
-            },
+            data = UserData(
+                userId = user.uid,
+                username = user.displayName,
+                profilePictureUrl = user.photoUrl?.toString(),
+                emailId = user.email ?: ""
+            ),
             errorMessage = null
         )
-    } catch (e: Exception) {
+    }.getOrElse { e ->
         e.printStackTrace()
-        println(e.message)
-        println("email: $emailId, pass: $password")
-        SignInResult(data = null, errorMessage = e.message ?: "An unknown error occurred.")
+        SignInResult(null, e.message ?: "An error occurred")
     }
 
-
-    private suspend fun saveUserToFirestore(user: UserData) {
-
-        try {
-            firestore.collection("users")
-                .document(user.emailId) // Use userId as document ID
-                .set(user) // Save entire user object
-                .await()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw e // Re-throw if you want to handle it at a higher level
-        }
-    }
-
-
-
+    /**
+     * Sends a password reset email.
+     */
     fun sendPasswordResetEmail(email: String, callback: (Boolean) -> Unit) {
         auth.sendPasswordResetEmail(email)
-            .addOnCompleteListener { task ->
-                callback(task.isSuccessful)
-            }
+            .addOnCompleteListener { task -> callback(task.isSuccessful) }
     }
+
+    /**
+     * Saves user details to Firestore.
+     */
+    private suspend fun saveUserToFirestore(user: UserData) = runCatching {
+        firestore.collection("users")
+            .document(user.userId)
+            .set(user, SetOptions.merge())
+            .await()
+    }.onFailure { it.printStackTrace() }
+
+    /**
+     * Creates and assigns a wallet to the user if one does not exist.
+     */
+    private suspend fun setupUserWallet(userId: String) = runCatching {
+        val walletRef = firestore.collection("wallets").document(userId)
+        val walletSnapshot = walletRef.get().await()
+
+        if (!walletSnapshot.exists()) {
+            val wallet = Wallet(
+                userId = userId,
+                publicKey = "",
+                walletAddress = generateSecureRandomNumber(),
+                balance = 10_000.0,
+                creationDate = System.currentTimeMillis()
+            )
+            walletRef.set(wallet).await()
+        }
+    }.onFailure { it.printStackTrace() }
 }
 
